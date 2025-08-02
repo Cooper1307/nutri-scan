@@ -20,7 +20,7 @@
       <block wx:for="{{result.nutrients}}" wx:key="name">
         <view class="result-item {{item.rating}}">
           <view class="item-friendly-name">{{item.friendly_name}} ({{item.name}})</view>
-          <view class="item-value">{{item.value}} {{item.unit}}</v>
+          <view class="item-value">{{item.value}} {{item.unit}}</view>
           <view class="item-advice">{{item.advice}}</view>
         </view>
       </block>

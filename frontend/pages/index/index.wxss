@@ -5,46 +5,103 @@
   align-items: center;
   padding: 40rpx;
   box-sizing: border-box;
+  background-color: #f4f4f4;
+  min-height: 100vh;
 }
 
 .title {
-  font-size: 48rpx; /* 较大的标题字体 */
+  font-size: 56rpx;
   font-weight: bold;
-  margin-bottom: 80rpx;
   color: #333;
+  margin-top: 20rpx;
+}
+
+.subtitle {
+  font-size: 32rpx;
+  color: #888;
+  margin-bottom: 80rpx;
 }
 
 .upload-btn {
-  width: 80%;
-  height: 120rpx; /* 较大的按钮高度 */
+  width: 90%;
+  height: 120rpx;
   line-height: 120rpx;
-  font-size: 36rpx; /* 较大的按钮字体 */
-  margin-bottom: 60rpx;
-}
-
-.result-container, .error-container {
-  width: 100%;
-  margin-top: 40rpx;
-  padding: 30rpx;
-  border: 1px solid #eee;
-  border-radius: 10rpx;
-  background-color: #f9f9f9;
-}
-
-.result-title {
-  font-size: 36rpx;
+  font-size: 38rpx;
   font-weight: bold;
-  margin-bottom: 20rpx;
-  color: #07c160;
+  background-color: #07c160;
+  color: white;
+  border-radius: 60rpx;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.result-text {
+.loading-container {
+  margin-top: 60rpx;
   font-size: 32rpx;
   color: #555;
-  word-break: break-all;
+}
+
+.result-container {
+  width: 100%;
+  margin-top: 60rpx;
+}
+
+.result-summary {
+  font-size: 36rpx;
+  font-weight: bold;
+  text-align: center;
+  padding: 20rpx;
+  border-radius: 10rpx;
+  margin-bottom: 40rpx;
+  background-color: #fff;
+  color: #333;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30rpx;
+}
+
+.result-item {
+  padding: 30rpx;
+  border-radius: 16rpx;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 颜色评级 */
+.result-item.high { background-color: #e64340; } /* 红色 */
+.result-item.medium { background-color: #f0ad4e; } /* 黄色 */
+.result-item.low { background-color: #07c160; } /* 绿色 */
+
+.item-friendly-name {
+  font-size: 48rpx; /* 大字体，醒目 */
+  font-weight: bold;
+  margin-bottom: 10rpx;
+}
+
+.item-value {
+  font-size: 36rpx;
+  margin-bottom: 20rpx;
+  opacity: 0.9;
+}
+
+.item-advice {
+  font-size: 32rpx;
+  font-style: italic;
+}
+
+.error-container {
+  margin-top: 60rpx;
+  width: 100%;
+  padding: 30rpx;
+  background-color: #fff0f0;
+  border: 1px solid #e64340;
+  border-radius: 10rpx;
+  text-align: center;
 }
 
 .error-text {
   font-size: 32rpx;
-  color: #e64340; /* 醒目的红色错误提示 */
+  color: #e64340;
 }

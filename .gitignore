@@ -21,3 +21,6 @@ dist/
 /miniprogram_npm/
 /project.config.json
 /project.private.config.json
+
+# Env
+.env

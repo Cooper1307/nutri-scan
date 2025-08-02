@@ -1,15 +1,11 @@
-from pydantic import BaseModel
-from typing import List, Literal
+from sqlalchemy import Column, String, DateTime
+from sqlalchemy.sql import func
+from .database import Base
 
-# 定义评估结果的类型
-AssessmentType = Literal['green', 'yellow', 'red']
+class User(Base):
+    __tablename__ = "users"
 
-class NutrientDetail(BaseModel):
-    name: str
-    value: str
-    nrv_percent: float
-    assessment: AssessmentType
-
-class AnalysisResult(BaseModel):
-    overall_assessment: AssessmentType
-    details: List[NutrientDetail]
+    id = Column(String, primary_key=True, index=True)
+    openid = Column(String, unique=True, index=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

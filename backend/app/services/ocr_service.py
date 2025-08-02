@@ -1,5 +1,8 @@
 import os
 import asyncio
+from dotenv import load_dotenv
+
+load_dotenv()
 from aliyunsdkcore import client
 from aliyunsdkgreen.request.v20180509 import ImageSyncScanRequest
 import json

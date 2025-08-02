@@ -1,5 +1,8 @@
 fastapi
 uvicorn
+httpx
+SQLAlchemy
+psycopg2-binary
 python-multipart
 httpx
 alibabacloud_ocr_api20210707
@@ -7,3 +10,4 @@ alibabacloud_tea_openapi
 alibabacloud_darabonba_stream
 aliyun-python-sdk-core
 aliyun-python-sdk-green
+python-dotenv

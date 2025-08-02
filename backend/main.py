@@ -2,7 +2,13 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 from app.api.endpoints import router as api_router
+from app.database import engine, Base
 import os
+
+# 在应用启动时创建数据库表
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="营养健康小程序后端",

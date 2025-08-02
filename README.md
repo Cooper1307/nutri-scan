@@ -37,16 +37,25 @@
     ```bash
     set ALIYUN_ACCESS_KEY_ID=your_access_key_id
     set ALIYUN_ACCESS_KEY_SECRET=your_access_key_secret
+    set WECHAT_APPID=your_wechat_appid
+    set WECHAT_SECRET=your_wechat_secret
+    set DATABASE_URL=postgresql://user:password@host:port/dbname
     ```
   - **Windows (PowerShell)**:
     ```powershell
     $env:ALIYUN_ACCESS_KEY_ID="your_access_key_id"
     $env:ALIYUN_ACCESS_KEY_SECRET="your_access_key_secret"
+    $env:WECHAT_APPID="your_wechat_appid"
+    $env:WECHAT_SECRET="your_wechat_secret"
+    $env:DATABASE_URL="postgresql://user:password@host:port/dbname"
     ```
   - **Linux / macOS**:
     ```bash
     export ALIYUN_ACCESS_KEY_ID=your_access_key_id
     export ALIYUN_ACCESS_KEY_SECRET=your_access_key_secret
+    export WECHAT_APPID=your_wechat_appid
+    export WECHAT_SECRET=your_wechat_secret
+    export DATABASE_URL=postgresql://user:password@host:port/dbname
     ```
 - 启动服务: `python main.py`
 

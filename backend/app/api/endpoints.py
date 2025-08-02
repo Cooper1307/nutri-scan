@@ -1,14 +1,34 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, Request
 from app.services.ocr_service import recognize_text_from_image
+from app.services.wechat_service import get_user_openid
 from app.logic.analyzer import parse_nutrition_info, analyze_nutrients
 import os
 import uuid
+from pydantic import BaseModel
+
+class LoginPayload(BaseModel):
+    code: str
 
 router = APIRouter()
 
 # 确保静态文件目录存在
 STATIC_DIR = "static/images"
 os.makedirs(STATIC_DIR, exist_ok=True)
+
+@router.post("/login", summary="微信登录")
+async def login(payload: LoginPayload):
+    """
+    接收前端发送的 code，换取 openid。
+    """
+    try:
+        user_data = await get_user_openid(payload.code)
+        # 在实际应用中，您会在这里创建或更新用户信息到数据库
+        # 并生成一个自定义的登录令牌（token）返回给前端
+        return {"openid": user_data.get("openid"), "message": "Login successful"}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
 
 @router.post("/analyze")
 async def analyze_image(request: Request, file: UploadFile = File(...)):

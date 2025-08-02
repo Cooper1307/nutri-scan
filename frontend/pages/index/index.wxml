@@ -1,0 +1,21 @@
+<!--pages/index/index.wxml-->
+<view class="container">
+  <view class="title">拍下食品包装，立刻分析</view>
+  
+  <!-- 上传按钮 -->
+  <button class="upload-btn" type="primary" bindtap="chooseAndAnalyzeImage">点击这里，开始拍照或上传图片</button>
+
+  <!-- 分析结果展示区域 -->
+  <view wx:if="{{result}}" class="result-container">
+    <view class="result-title">分析结果：</view>
+    <!-- 这里我们会用更复杂的方式来展示分析结果，暂时先显示原始数据 -->
+    <text class="result-text">{{result.filename}}</text>
+    <text class="result-text">{{result.content_type}}</text>
+  </view>
+
+  <!-- 错误信息展示区域 -->
+  <view wx:if="{{error}}" class="error-container">
+    <view class="error-text">{{error}}</view>
+  </view>
+
+</view>

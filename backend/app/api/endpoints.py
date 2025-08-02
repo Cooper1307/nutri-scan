@@ -39,15 +39,10 @@ def login(payload: LoginPayload, db: Session = Depends(get_db)):
     接收前端发送的 code，换取 openid，并创建或获取用户。
     """
     try:
-        # 测试模式：如果code以test_开头，则使用模拟数据
-        if payload.code.startswith("test_"):
-            openid = f"test_openid_{payload.code}"
-            logger.info(f"Test mode: using mock openid {openid}")
-        else:
-            user_data = get_user_openid(payload.code)
-            openid = user_data.get("openid")
-            if not openid:
-                raise HTTPException(status_code=400, detail="Invalid code")
+        user_data = get_user_openid(payload.code)
+        openid = user_data.get("openid")
+        if not openid:
+            raise HTTPException(status_code=400, detail="Invalid code")
 
         db_user = crud.get_user_by_openid(db, openid=openid)
         if not db_user:

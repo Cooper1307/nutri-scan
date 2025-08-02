@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 
 # 配置
-API_BASE_URL = "http://192.168.11.101:8000"
+API_BASE_URL = "http://localhost:8000"
 TEST_IMAGE_PATH = "static/images"  # 测试图片目录
 
 def test_login():

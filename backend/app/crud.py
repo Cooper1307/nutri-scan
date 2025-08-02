@@ -1,3 +1,4 @@
+import json
 from sqlalchemy.orm import Session
 from . import models, schemas
 
@@ -14,7 +15,9 @@ def create_user(db: Session, openid: str):
 def create_analysis_history(
     db: Session, history: schemas.AnalysisHistoryCreate, user_id: str
 ):
-    db_history = models.AnalysisHistory(**history.dict(), user_id=user_id)
+    history_data = history.dict()
+    history_data['result_json'] = json.dumps(history_data['result_json'], ensure_ascii=False)
+    db_history = models.AnalysisHistory(**history_data, user_id=user_id)
     db.add(db_history)
     db.commit()
     db.refresh(db_history)

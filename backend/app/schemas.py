@@ -5,7 +5,7 @@ from typing import List, Optional
 # 用于创建新的分析历史记录
 class AnalysisHistoryBase(BaseModel):
     image_url: str
-    result_json: dict
+    result_json: str  # 数据库中存储为JSON字符串
 
 class AnalysisHistoryCreate(AnalysisHistoryBase):
     pass

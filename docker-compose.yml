@@ -1,0 +1,152 @@
+# 🐳 Docker Compose 配置文件
+# 用于生产环境的完整服务编排
+
+version: '3.8'
+
+services:
+  # 🚀 主应用服务
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nutrition_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://nutrition_user:${DB_PASSWORD}@db:5432/nutrition_db
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - ALIYUN_ACCESS_KEY_ID=${ALIYUN_ACCESS_KEY_ID}
+      - ALIYUN_ACCESS_KEY_SECRET=${ALIYUN_ACCESS_KEY_SECRET}
+      - WECHAT_APP_ID=${WECHAT_APP_ID}
+      - WECHAT_APP_SECRET=${WECHAT_APP_SECRET}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - nutrition_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 🗄️ PostgreSQL 数据库
+  db:
+    image: postgres:13-alpine
+    container_name: nutrition_db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=nutrition_db
+      - POSTGRES_USER=nutrition_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - nutrition_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nutrition_user -d nutrition_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 🔄 Redis 缓存服务
+  redis:
+    image: redis:6-alpine
+    container_name: nutrition_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - nutrition_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 🌐 Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: nutrition_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./uploads:/var/www/uploads
+    depends_on:
+      - app
+    networks:
+      - nutrition_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 📊 监控服务 (可选)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: nutrition_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - nutrition_network
+    profiles:
+      - monitoring
+
+  # 📈 Grafana 仪表板 (可选)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: nutrition_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - nutrition_network
+    profiles:
+      - monitoring
+
+# 📦 数据卷
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# 🌐 网络配置
+networks:
+  nutrition_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

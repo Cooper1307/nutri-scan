@@ -1,20 +1,34 @@
 from fastapi import FastAPI
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from app.api.endpoints import router as api_router
 from app.database import engine, Base
 import os
-
-# 在应用启动时创建数据库表
-@app.on_event("startup")
-def on_startup():
-    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="营养健康小程序后端",
     description="提供OCR识别和营养成分分析服务。",
     version="1.1.0",
 )
+
+# 配置CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 允许所有来源，在生产环境中应设置为特定来源
+    allow_credentials=True,
+    allow_methods=["*"],  # 允许所有HTTP方法
+    allow_headers=["*"],  # 允许所有HTTP头
+)
+
+# 在应用启动时创建数据库表
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
 
 # 确保静态目录存在
 STATIC_DIR = "static"

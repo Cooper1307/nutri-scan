@@ -1,0 +1,306 @@
+# 🚨 Prometheus 告警规则配置
+# 定义关键业务和系统指标的告警阈值
+
+groups:
+  # 🔥 应用服务告警
+  - name: nutrition-app-alerts
+    rules:
+      # 应用服务不可用
+      - alert: AppServiceDown
+        expr: up{job="nutrition-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: nutrition-app
+        annotations:
+          summary: "营养分析应用服务不可用"
+          description: "应用服务已停止响应超过1分钟"
+
+      # 高错误率
+      - alert: HighErrorRate
+        expr: |
+          (
+            rate(http_requests_total{job="nutrition-app",status=~"5.."}[5m]) /
+            rate(http_requests_total{job="nutrition-app"}[5m])
+          ) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: nutrition-app
+        annotations:
+          summary: "应用错误率过高"
+          description: "5分钟内错误率超过5%: {{ $value }}%"
+
+      # 响应时间过长
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95, 
+            rate(http_request_duration_seconds_bucket{job="nutrition-app"}[5m])
+          ) > 3
+        for: 5m
+        labels:
+          severity: warning
+          service: nutrition-app
+        annotations:
+          summary: "应用响应时间过长"
+          description: "95%请求响应时间超过3秒: {{ $value }}s"
+
+      # 内存使用率过高
+      - alert: HighMemoryUsage
+        expr: |
+          (container_memory_usage_bytes{name="nutrition_app"} / 
+           container_spec_memory_limit_bytes{name="nutrition_app"}) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          service: nutrition-app
+        annotations:
+          summary: "应用内存使用率过高"
+          description: "内存使用率超过80%: {{ $value }}%"
+
+      # CPU使用率过高
+      - alert: HighCPUUsage
+        expr: |
+          rate(container_cpu_usage_seconds_total{name="nutrition_app"}[5m]) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          service: nutrition-app
+        annotations:
+          summary: "应用CPU使用率过高"
+          description: "CPU使用率超过80%: {{ $value }}%"
+
+  # 🗄️ 数据库告警
+  - name: database-alerts
+    rules:
+      # 数据库服务不可用
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "数据库服务不可用"
+          description: "PostgreSQL数据库已停止响应超过1分钟"
+
+      # 数据库连接数过多
+      - alert: TooManyDatabaseConnections
+        expr: |
+          pg_stat_database_numbackends{datname="nutrition_db"} > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "数据库连接数过多"
+          description: "数据库连接数超过80: {{ $value }}"
+
+      # 数据库查询时间过长
+      - alert: SlowDatabaseQueries
+        expr: |
+          pg_stat_activity_max_tx_duration{datname="nutrition_db"} > 300
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "数据库查询时间过长"
+          description: "最长查询时间超过5分钟: {{ $value }}s"
+
+      # 数据库磁盘使用率过高
+      - alert: DatabaseDiskSpaceHigh
+        expr: |
+          (pg_database_size_bytes{datname="nutrition_db"} / 
+           (1024*1024*1024)) > 8
+        for: 10m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "数据库磁盘使用量过高"
+          description: "数据库大小超过8GB: {{ $value }}GB"
+
+  # 🔄 Redis告警
+  - name: redis-alerts
+    rules:
+      # Redis服务不可用
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis服务不可用"
+          description: "Redis缓存服务已停止响应超过1分钟"
+
+      # Redis内存使用率过高
+      - alert: RedisMemoryHigh
+        expr: |
+          (redis_memory_used_bytes / redis_memory_max_bytes) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis内存使用率过高"
+          description: "Redis内存使用率超过80%: {{ $value }}%"
+
+      # Redis连接数过多
+      - alert: RedisConnectionsHigh
+        expr: redis_connected_clients > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis连接数过多"
+          description: "Redis连接数超过100: {{ $value }}"
+
+  # 🌐 Nginx告警
+  - name: nginx-alerts
+    rules:
+      # Nginx服务不可用
+      - alert: NginxDown
+        expr: up{job="nginx"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: nginx
+        annotations:
+          summary: "Nginx服务不可用"
+          description: "Nginx反向代理服务已停止响应超过1分钟"
+
+      # Nginx错误率过高
+      - alert: NginxHighErrorRate
+        expr: |
+          rate(nginx_http_requests_total{status=~"4..|5.."}[5m]) / 
+          rate(nginx_http_requests_total[5m]) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: nginx
+        annotations:
+          summary: "Nginx错误率过高"
+          description: "5分钟内错误率超过5%: {{ $value }}%"
+
+  # 🖥️ 系统资源告警
+  - name: system-alerts
+    rules:
+      # 磁盘空间不足
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / 
+           node_filesystem_size_bytes{mountpoint="/"}) * 100 < 20
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "磁盘空间不足"
+          description: "根分区可用空间少于20%: {{ $value }}%"
+
+      # 系统负载过高
+      - alert: HighSystemLoad
+        expr: node_load1 > 4
+        for: 10m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "系统负载过高"
+          description: "1分钟平均负载超过4: {{ $value }}"
+
+      # 系统内存使用率过高
+      - alert: HighSystemMemory
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 10m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "系统内存使用率过高"
+          description: "内存使用率超过90%: {{ $value }}%"
+
+  # 🔍 外部服务告警
+  - name: external-service-alerts
+    rules:
+      # 网站不可访问
+      - alert: WebsiteDown
+        expr: probe_success{job="blackbox"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: website
+        annotations:
+          summary: "网站不可访问"
+          description: "网站 {{ $labels.instance }} 无法访问超过2分钟"
+
+      # 网站响应时间过长
+      - alert: WebsiteSlowResponse
+        expr: probe_duration_seconds{job="blackbox"} > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: website
+        annotations:
+          summary: "网站响应时间过长"
+          description: "网站 {{ $labels.instance }} 响应时间超过5秒: {{ $value }}s"
+
+      # SSL证书即将过期
+      - alert: SSLCertificateExpiringSoon
+        expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 30
+        for: 1h
+        labels:
+          severity: warning
+          service: ssl
+        annotations:
+          summary: "SSL证书即将过期"
+          description: "SSL证书将在30天内过期: {{ $labels.instance }}"
+
+  # 📱 业务指标告警
+  - name: business-alerts
+    rules:
+      # 图片分析失败率过高
+      - alert: HighImageAnalysisFailureRate
+        expr: |
+          (
+            rate(image_analysis_total{status="failed"}[10m]) /
+            rate(image_analysis_total[10m])
+          ) * 100 > 10
+        for: 10m
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "图片分析失败率过高"
+          description: "10分钟内图片分析失败率超过10%: {{ $value }}%"
+
+      # OCR服务调用失败
+      - alert: OCRServiceFailure
+        expr: |
+          rate(ocr_requests_total{status="failed"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: ocr
+        annotations:
+          summary: "OCR服务调用失败"
+          description: "OCR服务调用失败率异常: {{ $value }}/min"
+
+      # 用户登录失败率过高
+      - alert: HighLoginFailureRate
+        expr: |
+          (
+            rate(user_login_total{status="failed"}[10m]) /
+            rate(user_login_total[10m])
+          ) * 100 > 20
+        for: 10m
+        labels:
+          severity: warning
+          service: auth
+        annotations:
+          summary: "用户登录失败率过高"
+          description: "10分钟内登录失败率超过20%: {{ $value }}%"

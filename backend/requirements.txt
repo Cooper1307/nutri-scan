@@ -2,7 +2,6 @@ fastapi
 uvicorn
 httpx
 SQLAlchemy
-psycopg2-binary
 python-multipart
 httpx
 alibabacloud_ocr_api20210707

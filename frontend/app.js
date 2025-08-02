@@ -4,12 +4,11 @@ App({
     userInfo: null,
     analysisResult: null,
     // 后端服务器地址
-    API_URL: 'http://127.0.0.1:8000',
+    API_URL: 'http://192.168.11.101:8000',
     openid: null,
-    userId: null
-  },
-  globalData: {
-    analysisResult: null
+    userId: null,
+    // 定义一个回调函数，用于登录成功后通知页面
+    userIdReadyCallback: null,
   },
   onLaunch() {
     // 小程序启动时执行，进行静默登录
@@ -25,9 +24,13 @@ App({
             },
             success: (loginRes) => {
               if (loginRes.statusCode === 200 && loginRes.data.openid) {
-                console.log('登录成功', loginRes.data);
+                // 登录成功，静默处理
                 this.globalData.openid = loginRes.data.openid;
                 this.globalData.userId = loginRes.data.user_id;
+                // 如果有页面设置了回调函数，则执行
+                if (this.globalData.userIdReadyCallback) {
+                  this.globalData.userIdReadyCallback(loginRes.data.user_id);
+                }
               } else {
                 console.error('登录失败', loginRes.data.detail || '无法获取openid');
               }

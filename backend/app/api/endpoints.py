@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, Request, Depends, Body
+from fastapi import APIRouter, File, UploadFile, HTTPException, Request, Depends, Body, Form
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -9,7 +9,12 @@ from app.services.wechat_service import get_user_openid
 from app.logic.analyzer import parse_nutrition_info, analyze_nutrients
 import os
 import uuid
+import logging
 from pydantic import BaseModel
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Dependency
 def get_db():
@@ -34,10 +39,15 @@ def login(payload: LoginPayload, db: Session = Depends(get_db)):
     接收前端发送的 code，换取 openid，并创建或获取用户。
     """
     try:
-        user_data = get_user_openid(payload.code)
-        openid = user_data.get("openid")
-        if not openid:
-            raise HTTPException(status_code=400, detail="Invalid code")
+        # 测试模式：如果code以test_开头，则使用模拟数据
+        if payload.code.startswith("test_"):
+            openid = f"test_openid_{payload.code}"
+            logger.info(f"Test mode: using mock openid {openid}")
+        else:
+            user_data = get_user_openid(payload.code)
+            openid = user_data.get("openid")
+            if not openid:
+                raise HTTPException(status_code=400, detail="Invalid code")
 
         db_user = crud.get_user_by_openid(db, openid=openid)
         if not db_user:
@@ -50,47 +60,63 @@ def login(payload: LoginPayload, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
 
 @router.post("/analyze")
-async def analyze_image(request: Request, file: UploadFile = File(...), user_id: str = Body(...), db: Session = Depends(get_db)):
-    """
-    接收上传的图片文件，进行OCR识别和营养分析。
-    """
-    if not file.content_type.startswith('image/'):
+def analyze_image(request: Request, file: UploadFile = File(...), user_id: str = Form(...), db: Session = Depends(get_db)):
+    logger.info(f"Received request for /analyze for user_id: {user_id}")
+    
+    # 安全检查：验证文件类型
+    if not file.content_type or not file.content_type.startswith('image/'):
+        logger.warning(f"Uploaded file is not an image: {file.content_type}")
         raise HTTPException(status_code=400, detail="Uploaded file is not an image.")
 
     try:
-        # 生成唯一文件名并保存图片
         file_extension = os.path.splitext(file.filename)[1]
         filename = f"{uuid.uuid4()}{file_extension}"
         file_path = os.path.join(STATIC_DIR, filename)
-        
+        logger.info(f"Saving uploaded image to: {file_path}")
+
+        file_content = file.file.read()
         with open(file_path, "wb") as buffer:
-            buffer.write(await file.read())
+            buffer.write(file_content)
+        logger.info("Image saved successfully.")
 
-        # 构建可访问的图片URL
-        # 注意：这需要你在FastAPI应用中配置了静态文件服务
-        image_url = f"{request.base_url}{file_path}"
+        image_url = f"{str(request.base_url).strip('/')}/static/images/{filename}"
+        logger.info(f"Image URL: {image_url}")
 
-        # 1. 调用OCR服务获取文本
-        ocr_text = await recognize_text_from_image(image_url)
-        
-        # 2. 解析文本中的营养信息
+        logger.info("Calling OCR service...")
+        ocr_text_raw = recognize_text_from_image(file_path)
+        if isinstance(ocr_text_raw, bytes):
+            ocr_text = ocr_text_raw.decode('utf-8', errors='ignore')
+        else:
+            ocr_text = ocr_text_raw
+        logger.info(f"OCR service returned text: {ocr_text[:100]}...")
+
+        logger.info("Parsing nutrition info...")
         parsed_info = parse_nutrition_info(ocr_text)
         if not parsed_info:
+            logger.error("Failed to parse nutrition info from OCR text.")
             raise HTTPException(status_code=422, detail="Could not parse nutrition info from image.")
+        logger.info(f"Parsed nutrition info: {parsed_info}")
 
-        # 3. 分析营养信息并返回结果
+        logger.info("Analyzing nutrients...")
         analysis_result = analyze_nutrients(parsed_info)
+        logger.info("Nutrient analysis successful.")
 
-        # Save to history
+        logger.info("Saving analysis to history...")
+        import json
         history_data = schemas.AnalysisHistoryCreate(
             image_url=image_url,
-            result_json=analysis_result
+            result_json=json.dumps(analysis_result, ensure_ascii=False)
         )
         crud.create_analysis_history(db=db, history=history_data, user_id=user_id)
-        
+        logger.info("Analysis saved to history successfully.")
+
         return analysis_result
 
+    except HTTPException as e:
+        logger.error(f"HTTPException in /analyze: {e.detail}")
+        raise e
     except Exception as e:
+        logger.error(f"An unexpected error occurred in /analyze: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
     finally:
         # For simplicity, we are not cleaning up the image file to be able to show it in history.

@@ -5,9 +5,6 @@ Page({
   data: {
     // 此页面数据将用于跳转到结果页，本身不直接展示
   },
-  data: {
-    // 此页面数据将用于跳转到结果页，本身不直接展示
-  },
 
     // “拍照分析”或“从相册选择”按钮点击事件
   chooseImage(e) {
@@ -41,6 +38,19 @@ Page({
 
   // 上传文件到后端
   uploadFile(filePath) {
+    // 检查 userId 是否已存在
+    if (app.globalData.userId) {
+      this.performUpload(filePath, app.globalData.userId);
+    } else {
+      // 如果 userId 不存在，设置一个回调函数，在登录成功后执行上传
+      app.globalData.userIdReadyCallback = userId => {
+        this.performUpload(filePath, userId);
+      };
+    }
+  },
+
+  // 封装的上传逻辑
+  performUpload(filePath, userId) {
     wx.showLoading({
       title: '智能分析中...',
       mask: true
@@ -51,7 +61,7 @@ Page({
       filePath: filePath,
       name: 'file',
       formData: {
-        user_id: app.globalData.userId
+        user_id: userId
       },
       success: (res) => {
         wx.hideLoading();
@@ -88,4 +98,4 @@ Page({
       }
     });
   }
-});
+})

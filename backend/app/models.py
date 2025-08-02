@@ -19,7 +19,7 @@ class AnalysisHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String, ForeignKey("users.id"))
     image_url = Column(String, nullable=False)
-    result_json = Column(JSON, nullable=False)
+    result_json = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     owner = relationship("User", back_populates="analysis_history")

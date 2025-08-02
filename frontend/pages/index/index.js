@@ -1,13 +1,19 @@
 // index.js
 const app = getApp()
 
-// 后端服务的地址
-const API_URL = 'http://127.0.0.1:8000';
-
 Page({
   data: {
     // 此页面数据将用于跳转到结果页，本身不直接展示
   },
+  data: {
+    // 此页面数据将用于跳转到结果页，本身不直接展示
+  },
+
+    // “拍照分析”或“从相册选择”按钮点击事件
+  chooseImage(e) {
+    const sourceType = e.currentTarget.dataset.source;
+    this.handleChooseImage(sourceType);
+  }, 
 
   // 统一的图片选择处理函数
   handleChooseImage(sourceType) {
@@ -31,15 +37,7 @@ Page({
     });
   },
 
-  // “拍照分析”按钮点击事件
-  chooseImage() {
-    this.handleChooseImage('camera');
-  },
-
-  // “从相册选择”按钮点击事件
-  chooseImageFromAlbum() {
-    this.handleChooseImage('album');
-  },
+  
 
   // 上传文件到后端
   uploadFile(filePath) {
@@ -49,9 +47,12 @@ Page({
     });
 
     wx.uploadFile({
-      url: `${API_URL}/api/analyze`,
+      url: `${app.globalData.API_URL}/api/analyze`,
       filePath: filePath,
       name: 'file',
+      formData: {
+        user_id: app.globalData.userId
+      },
       success: (res) => {
         wx.hideLoading();
         // 检查HTTP状态码

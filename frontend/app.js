@@ -1,13 +1,45 @@
 // app.js
 App({
   globalData: {
+    userInfo: null,
+    analysisResult: null,
+    // 后端服务器地址
+    API_URL: 'http://127.0.0.1:8000',
+    openid: null,
+    userId: null
+  },
+  globalData: {
     analysisResult: null
   },
   onLaunch() {
-    // 小程序启动时执行
-    console.log('App Launch')
-  },
-  globalData: {
-    userInfo: null
+    // 小程序启动时执行，进行静默登录
+    wx.login({
+      success: res => {
+        // 发送 res.code 到后台换取 openId, sessionKey, unionId
+        if (res.code) {
+          wx.request({
+            url: `${this.globalData.API_URL}/api/login`,
+            method: 'POST',
+            data: {
+              code: res.code
+            },
+            success: (loginRes) => {
+              if (loginRes.statusCode === 200 && loginRes.data.openid) {
+                console.log('登录成功', loginRes.data);
+                this.globalData.openid = loginRes.data.openid;
+                this.globalData.userId = loginRes.data.user_id;
+              } else {
+                console.error('登录失败', loginRes.data.detail || '无法获取openid');
+              }
+            },
+            fail: (err) => {
+              console.error('请求登录接口失败', err);
+            }
+          })
+        } else {
+          console.error('wx.login 失败！' + res.errMsg)
+        }
+      }
+    });
   }
 })

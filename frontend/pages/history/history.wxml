@@ -1,0 +1,19 @@
+<view class="container">
+  <view wx:if="{{history.length > 0}}" class="history-list">
+    <block wx:for="{{history}}" wx:key="id">
+      <view class="history-item" bindtap="viewDetail" data-result="{{item.result_json}}">
+        <image class="history-image" src="{{item.image_url}}" mode="aspectFill"></image>
+        <view class="history-info">
+          <view class="history-assessment history-assessment-{{item.result_json.overall_assessment}}">
+            {{assessmentTexts[item.result_json.overall_assessment]}}
+          </view>
+          <view class="history-time">{{item.created_at_formatted}}</view>
+        </view>
+      </view>
+    </block>
+  </view>
+  <view wx:else class="empty-state">
+    <image class="empty-icon" src="/images/empty.svg"></image>
+    <text>还没有分析记录哦</text>
+  </view>
+</view>

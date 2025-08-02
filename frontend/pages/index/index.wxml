@@ -5,11 +5,11 @@
     <text class="subtitle">拍照读懂营养成分表</text>
 
     <view class="button-group">
-      <button class="main-button" type="primary" bindtap="chooseImage">
+      <button class="main-button" type="primary" bindtap="chooseImage" data-source="camera">
         <image class="button-icon" src="/images/camera.svg"></image>
         拍照分析
       </button>
-      <button class="secondary-button" bindtap="chooseImageFromAlbum">
+      <button class="secondary-button" bindtap="chooseImage" data-source="album">
         从相册选择
       </button>
     </view>

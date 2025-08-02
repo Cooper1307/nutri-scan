@@ -1,0 +1,28 @@
+<view class="container result-{{result.overall_assessment}}">
+  <view class="main-result-card">
+    <view class="assessment-icon-wrapper">
+      <image class="assessment-icon" src="/images/icon-{{result.overall_assessment}}.png"></image>
+    </view>
+    <text class="assessment-title">{{assessmentText}}</text>
+    <text class="assessment-suggestion">{{suggestionText}}</text>
+  </view>
+
+  <view class="details-card">
+    <view class="card-title">主要营养成分</view>
+    <view class="divider"></view>
+    <view class="nutrient-list">
+      <block wx:for="{{result.items}}" wx:key="name">
+        <view class="nutrient-item">
+          <view class="nutrient-info">
+            <view class="nutrient-name">{{item.name}}</view>
+            <view class="nutrient-value">{{item.value}}</view>
+          </view>
+          <view class="nutrient-assessment nutrient-assessment-{{item.assessment}}"></view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <button class="back-button" bindtap="goBack">返回首页</button>
+
+</view>

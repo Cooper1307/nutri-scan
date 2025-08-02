@@ -1,48 +1,90 @@
-// pages/index/index.js
+// index.js
+const app = getApp()
+
+// 后端服务的地址
+const API_URL = 'http://127.0.0.1:8000';
+
 Page({
   data: {
-    // 这里存放页面上需要用到的数据
-    result: null, // 用于存储后端返回的分析结果
-    error: null,  // 用于存储错误信息
+    // 此页面数据将用于跳转到结果页，本身不直接展示
   },
 
-  // 核心功能：选择图片并上传分析
-  chooseAndAnalyzeImage() {
-    const that = this;
+  // 统一的图片选择处理函数
+  handleChooseImage(sourceType) {
     wx.chooseMedia({
-      count: 1, // 最多只能选一张图
-      mediaType: ['image'], // 只能选择图片
-      sourceType: ['album', 'camera'], // 可以从相册选，也可以用相机拍
-      success(res) {
+      count: 1,
+      mediaType: ['image'],
+      sourceType: [sourceType], // 'camera' 或 'album'
+      sizeType: ['compressed'],
+      success: (res) => {
         const tempFilePath = res.tempFiles[0].tempFilePath;
-        that.uploadAndAnalyze(tempFilePath);
+        this.uploadFile(tempFilePath);
       },
-      fail(err) {
-        console.error("选择图片失败", err);
-        that.setData({ error: '选择图片失败，请重试' });
+      fail: (err) => {
+        if (err.errMsg.indexOf('cancel') === -1) {
+          wx.showToast({
+            title: '选择图片失败',
+            icon: 'none'
+          });
+        }
       }
-    })
+    });
   },
 
-  // 上传图片到后端服务器进行分析
-  uploadAndAnalyze(filePath) {
-    const that = this;
-    that.setData({ result: null, error: null }); // 清空上次结果
+  // “拍照分析”按钮点击事件
+  chooseImage() {
+    this.handleChooseImage('camera');
+  },
+
+  // “从相册选择”按钮点击事件
+  chooseImageFromAlbum() {
+    this.handleChooseImage('album');
+  },
+
+  // 上传文件到后端
+  uploadFile(filePath) {
+    wx.showLoading({
+      title: '智能分析中...',
+      mask: true
+    });
 
     wx.uploadFile({
-      url: 'http://127.0.0.1:8000/analyze', // 这是我们后端服务的地址
+      url: `${API_URL}/api/analyze`,
       filePath: filePath,
-      name: 'file', // 和后端约定的文件名
-      success(res) {
-        // res.data 是后端返回的字符串，需要解析成JSON对象
-        const data = JSON.parse(res.data);
-        console.log("分析结果:", data);
-        that.setData({ result: data });
+      name: 'file',
+      success: (res) => {
+        wx.hideLoading();
+        // 检查HTTP状态码
+        if (res.statusCode === 200) {
+          try {
+            const analysisResult = JSON.parse(res.data);
+            // 将分析结果存储到全局变量或通过URL参数传递给结果页
+            getApp().globalData.analysisResult = analysisResult;
+            wx.navigateTo({
+              url: '/pages/result/result'
+            });
+          } catch (e) {
+            wx.showToast({
+              title: '服务器返回数据格式错误',
+              icon: 'none'
+            });
+          }
+        } else {
+          // 处理非200的HTTP状态
+          wx.showToast({
+            title: `服务器错误: ${res.statusCode}`,
+            icon: 'none'
+          });
+        }
       },
-      fail(err) {
-        console.error("上传分析失败", err);
-        that.setData({ error: '分析失败，请检查网络或稍后重试' });
+      fail: (err) => {
+        wx.hideLoading();
+        wx.showToast({
+          title: '请求失败，请检查网络',
+          icon: 'none'
+        });
+        console.error('Upload failed:', err);
       }
-    })
+    });
   }
-})
+});

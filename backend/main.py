@@ -1,21 +1,31 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+import uvicorn
+from app.api.endpoints import router as api_router
+import os
 
 app = FastAPI(
-    title="老年人营养健康小程序后端",
-    description="提供食品营养成分OCR分析服务。",
-    version="1.0.0",
+    title="营养健康小程序后端",
+    description="提供OCR识别和营养成分分析服务。",
+    version="1.1.0",
 )
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the Elderly Health Nutrition Mini-Program API"}
+# 确保静态目录存在
+STATIC_DIR = "static"
+os.makedirs(STATIC_DIR, exist_ok=True)
 
+# 挂载静态文件目录
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-@app.post("/analyze")
-async def analyze_image(file: UploadFile = File(...)):
+@app.get("/", tags=["General"], summary="服务健康检查")
+def health_check():
     """
-    接收上传的图片文件，进行OCR分析并返回结构化数据。
-    (当前为桩代码，仅返回文件名)
+    执行一个简单的健康检查，如果服务正常运行，则返回成功消息。
     """
-    # 在这里将添加调用OCR服务和分析逻辑
-    return {"filename": file.filename, "content_type": file.content_type}
+    return {"status": "ok", "message": "服务运行正常"}
+
+app.include_router(api_router, prefix="/api", tags=["Analysis"])
+
+if __name__ == "__main__":
+    # 启动服务，监听在 8000 端口
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

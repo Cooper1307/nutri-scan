@@ -1,50 +1,85 @@
-/* pages/index/index.wxss */
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40rpx;
+  justify-content: space-between;
+  height: 100vh;
+  background-color: #f7f8fa;
+  padding: 50rpx 30rpx;
   box-sizing: border-box;
 }
 
-.title {
-  font-size: 48rpx; /* 较大的标题字体 */
-  font-weight: bold;
-  margin-bottom: 80rpx;
-  color: #333;
-}
-
-.upload-btn {
-  width: 80%;
-  height: 120rpx; /* 较大的按钮高度 */
-  line-height: 120rpx;
-  font-size: 36rpx; /* 较大的按钮字体 */
-  margin-bottom: 60rpx;
-}
-
-.result-container, .error-container {
+.main-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
-  margin-top: 40rpx;
-  padding: 30rpx;
-  border: 1px solid #eee;
-  border-radius: 10rpx;
-  background-color: #f9f9f9;
+  background-color: #ffffff;
+  border-radius: 32rpx;
+  padding: 60rpx 40rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
+  margin-top: 10vh;
 }
 
-.result-title {
-  font-size: 36rpx;
+.logo {
+  width: 180rpx;
+  height: 180rpx;
+  margin-bottom: 30rpx;
+}
+
+.title {
+  font-size: 52rpx;
   font-weight: bold;
-  margin-bottom: 20rpx;
-  color: #07c160;
+  color: #1f2329;
+  margin-bottom: 16rpx;
 }
 
-.result-text {
+.subtitle {
   font-size: 32rpx;
-  color: #555;
-  word-break: break-all;
+  color: #8a8f99;
+  margin-bottom: 80rpx;
 }
 
-.error-text {
+.button-group {
+  width: 100%;
+}
+
+.main-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 110rpx;
+  line-height: 110rpx;
+  font-size: 38rpx;
+  font-weight: bold;
+  color: #ffffff;
+  background: linear-gradient(90deg, #3d7eff, #4a8aff);
+  border-radius: 55rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 16rpx rgba(61, 126, 255, 0.2);
+}
+
+.button-icon {
+  width: 48rpx;
+  height: 48rpx;
+  margin-right: 16rpx;
+}
+
+.secondary-button {
+  width: 100%;
   font-size: 32rpx;
-  color: #e64340; /* 醒目的红色错误提示 */
+  color: #3d7eff;
+  background-color: transparent;
+  border: none;
+}
+
+.secondary-button::after {
+  border: none;
+}
+
+.footer {
+  padding: 40rpx 0;
+  font-size: 26rpx;
+  color: #c8c9cc;
 }
